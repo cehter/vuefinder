@@ -630,35 +630,46 @@ export class ArrayDriver extends BaseAdapter {
   configureUploader?(uppy: any, context: { getTargetPath: () => string }): void {
     if (!uppy) return;
 
-    uppy.on('upload-success', async (file: any) => {
-      try {
-        this.ensureWritable();
+    // ArrayDriver has no network transport, so it must act as its own Uppy
+    // uploader (there is nothing else that would emit upload-start/-success).
+    uppy.addUploader(async (fileIDs: string[]) => {
+      const files = fileIDs.map((id: string) => uppy.getFile(id)).filter(Boolean);
+      if (!files.length) return;
 
-        const target = this.normalizePath(context.getTargetPath());
-        const fullName = file?.name || 'file';
-        const type = file?.type || null;
-        const data: Blob | undefined = file?.data;
-        const size = file?.size || 0;
+      uppy.emit('upload-start', files);
 
-        const segments = fullName.split('/').filter(Boolean);
-        const name = segments.pop() || fullName;
-        const dir = segments.length ? this.ensureDirPath(target, segments) : target;
+      for (const file of files) {
+        try {
+          this.ensureWritable();
 
-        const entry = this.makeFileEntry(dir, name, size, type);
-        this.upsert(entry);
+          const target = this.normalizePath(context.getTargetPath());
+          const fullName = file?.name || 'file';
+          const type = file?.type || null;
+          const data: Blob | undefined = file?.data;
+          const size = file?.size || 0;
 
-        if (data) {
-          try {
-            const buf = await data.arrayBuffer();
-            this.contentStore.set(entry.path, buf);
-          } catch {
+          const segments = fullName.split('/').filter(Boolean);
+          const name = segments.pop() || fullName;
+          const dir = segments.length ? this.ensureDirPath(target, segments) : target;
+
+          const entry = this.makeFileEntry(dir, name, size, type);
+          this.upsert(entry);
+
+          if (data) {
+            try {
+              const buf = await data.arrayBuffer();
+              this.contentStore.set(entry.path, buf);
+            } catch {
+              this.contentStore.set(entry.path, '');
+            }
+          } else {
             this.contentStore.set(entry.path, '');
           }
-        } else {
-          this.contentStore.set(entry.path, '');
+
+          uppy.emit('upload-success', file, { status: 200, body: {} });
+        } catch (err) {
+          uppy.emit('upload-error', file, err instanceof Error ? err : new Error('Upload failed'));
         }
-      } catch {
-        // Keep uploader flow resilient for local drivers.
       }
     });
   }
