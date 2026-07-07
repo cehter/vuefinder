@@ -3,6 +3,8 @@ import { scanFiles } from '../utils/scanFiles';
 
 export interface ExternalFile {
   name: string;
+  /** Path relative to the dropped item, e.g. "MyFolder/sub/file.txt". Preserves the folder structure. */
+  relativePath: string;
   size: number;
   type: string;
   lastModified: Date;
@@ -67,8 +69,11 @@ export function useExternalDragDrop() {
           if (getAsEntry) {
             // Use scanFiles for folder structure preservation
             await scanFiles((entry: any, file: File) => {
+              const fullPath = (entry?.fullPath as string) || file.name;
+              const relativePath = fullPath.startsWith('/') ? fullPath.slice(1) : fullPath;
               externalFiles.value.push({
                 name: file.name,
+                relativePath,
                 size: file.size,
                 type: file.type,
                 lastModified: new Date(file.lastModified),
@@ -81,6 +86,7 @@ export function useExternalDragDrop() {
             if (file) {
               externalFiles.value.push({
                 name: file.name,
+                relativePath: file.name,
                 size: file.size,
                 type: file.type,
                 lastModified: new Date(file.lastModified),

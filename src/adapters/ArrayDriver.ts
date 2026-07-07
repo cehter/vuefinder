@@ -613,6 +613,20 @@ export class ArrayDriver extends BaseAdapter {
     return path;
   }
 
+  // Auto-creates any missing intermediate directories for a "sub/dir/name" path,
+  // so folder drag & drop / folder picker uploads recreate the dropped folder itself.
+  private ensureDirPath(target: string, segments: string[]): string {
+    let dir = target;
+    for (const segment of segments) {
+      const full = this.join(dir, segment);
+      if (!this.findByPath(full)) {
+        this.upsert(this.makeDirEntry(dir, segment));
+      }
+      dir = full;
+    }
+    return dir;
+  }
+
   configureUploader?(uppy: any, context: { getTargetPath: () => string }): void {
     if (!uppy) return;
 
@@ -621,12 +635,16 @@ export class ArrayDriver extends BaseAdapter {
         this.ensureWritable();
 
         const target = this.normalizePath(context.getTargetPath());
-        const name = file?.name || 'file';
+        const fullName = file?.name || 'file';
         const type = file?.type || null;
         const data: Blob | undefined = file?.data;
         const size = file?.size || 0;
 
-        const entry = this.makeFileEntry(target, name, size, type);
+        const segments = fullName.split('/').filter(Boolean);
+        const name = segments.pop() || fullName;
+        const dir = segments.length ? this.ensureDirPath(target, segments) : target;
+
+        const entry = this.makeFileEntry(dir, name, size, type);
         this.upsert(entry);
 
         if (data) {
