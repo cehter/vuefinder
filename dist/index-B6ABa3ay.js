@@ -234,7 +234,7 @@ function gn() {
 function Nn(s) {
   return s ? s === "simple" || s === "advanced" ? { ...Un[s] } : { ...gn(), ...s } : gn();
 }
-const No = "4.6.0";
+const No = "4.6.0-cehter.1";
 function Jt(s, e, t, n, i) {
   return e = Math, t = e.log, n = 1024, i = t(s) / t(n) | 0, (s / e.pow(n, i)).toFixed(0) + " " + (i ? "KMGTPEZY"[--i] + "iB" : "B");
 }
@@ -2189,7 +2189,7 @@ const da = { class: "vuefinder__text-preview" }, ca = { class: "vuefinder__text-
   emits: ["success"],
   setup(s, { emit: e }) {
     const t = Ln({
-      loader: () => import("./CodeMirrorEditor-DT2jBxT8.js").then((f) => f.C),
+      loader: () => import("./CodeMirrorEditor-B1ig00L7.js").then((f) => f.C),
       delay: 100
     }), n = e, i = I(""), d = I(""), r = I(!1), l = I(!1), u = ie(), v = Be(u), { enabled: b } = Ve(), { t: h } = u.i18n;
     we(async () => {
@@ -2281,7 +2281,7 @@ const da = { class: "vuefinder__text-preview" }, ca = { class: "vuefinder__text-
   emits: ["success"],
   setup(s, { emit: e }) {
     const t = Ln({
-      loader: () => import("./CodeMirrorEditor-DT2jBxT8.js").then((Z) => Z.C),
+      loader: () => import("./CodeMirrorEditor-B1ig00L7.js").then((Z) => Z.C),
       delay: 100
     }), n = e, i = I(""), d = I(""), r = vt([]), l = vt([]), u = I(null), v = I(!1), b = I(!1), h = z(() => r.value.length > Ht), _ = z(() => h.value ? r.value.slice(0, Ht) : r.value), k = ie(), w = Be(k), { enabled: $ } = Ve(), { t: m } = k.i18n;
     async function g(Z) {
