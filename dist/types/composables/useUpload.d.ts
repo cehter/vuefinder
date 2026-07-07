@@ -37,7 +37,10 @@ export interface UseUploadReturn {
     close: () => void;
     getClassNameForEntry: (entry: QueueEntry) => string;
     getIconForEntry: (entry: QueueEntry) => string;
-    addExternalFiles: (files: File[]) => void;
+    addExternalFiles: (files: (File | {
+        file: File;
+        name?: string;
+    })[]) => void;
     renameEntry: (entry: QueueEntry, newName: string) => Promise<void>;
 }
 export default function useUpload(customUploader?: any): UseUploadReturn;

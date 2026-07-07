@@ -67,6 +67,7 @@ export declare class ArrayDriver extends BaseAdapter {
     }): string;
     search(params: SearchParams): Promise<DirEntry[]>;
     save(params: SaveParams): Promise<string>;
+    private ensureDirPath;
     configureUploader?(uppy: any, context: {
         getTargetPath: () => string;
     }): void;
