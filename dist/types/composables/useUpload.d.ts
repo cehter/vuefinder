@@ -1,21 +1,7 @@
 import { type Ref } from 'vue';
-export declare const QUEUE_ENTRY_STATUS: {
-    readonly PENDING: 0;
-    readonly CANCELED: 1;
-    readonly UPLOADING: 2;
-    readonly ERROR: 3;
-    readonly DONE: 10;
-};
-export type QueueEntryStatus = (typeof QUEUE_ENTRY_STATUS)[keyof typeof QUEUE_ENTRY_STATUS];
-export interface QueueEntry {
-    id: string;
-    name: string;
-    size: string;
-    status: QueueEntryStatus;
-    statusName: string;
-    percent: string | null;
-    originalFile: File;
-}
+import { QUEUE_ENTRY_STATUS, type QueueEntry } from './useUploadEngine';
+export { QUEUE_ENTRY_STATUS };
+export type { QueueEntry };
 export interface UseUploadReturn {
     container: Ref<HTMLElement | null>;
     internalFileInput: Ref<HTMLInputElement | null>;
@@ -43,4 +29,4 @@ export interface UseUploadReturn {
     })[]) => void;
     renameEntry: (entry: QueueEntry, newName: string) => Promise<void>;
 }
-export default function useUpload(customUploader?: any): UseUploadReturn;
+export default function useUpload(_customUploader?: any): UseUploadReturn;

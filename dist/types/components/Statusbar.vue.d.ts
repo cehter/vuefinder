@@ -1,10 +1,10 @@
-declare var __VLS_6: {
+declare var __VLS_11: {
     path: any;
     count: number;
     selected: any;
 };
 type __VLS_Slots = {} & {
-    actions?: (props: typeof __VLS_6) => any;
+    actions?: (props: typeof __VLS_11) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
