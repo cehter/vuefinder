@@ -3,6 +3,8 @@ import { computed } from 'vue';
 import { useApp } from '../composables/useApp';
 import { useStore } from '@nanostores/vue';
 import StorageSVG from '../assets/icons/storage.svg';
+import UploadSVG from '../assets/icons/upload.svg';
+import ModalUpload from './modals/ModalUpload.vue';
 import type { StoreValue } from 'nanostores';
 import type { CurrentPathState } from '../stores/files';
 import type { DirEntry } from '../types';
@@ -10,6 +12,11 @@ import type { DirEntry } from '../types';
 const app = useApp();
 const { t } = app.i18n;
 const fs = app.fs;
+
+// Upload keeps running after the modal is closed (see useUploadEngine); show a
+// compact progress indicator + restore button here while it's uploading in the background.
+const uploadInProgress = computed(() => app.upload.uploading && !app.modal.visible);
+const restoreUploadModal = () => app.modal.open(ModalUpload);
 
 // Use nanostores reactive values for template reactivity
 const sortedFiles: StoreValue<DirEntry[]> = useStore(fs.sortedFiles);
@@ -71,6 +78,16 @@ const selectedItemsList = computed(() => selectedItems.value || []);
     </div>
 
     <div class="vuefinder__status-bar__actions">
+      <button
+        v-if="uploadInProgress"
+        type="button"
+        class="vuefinder__status-bar__upload"
+        :title="t('Show upload progress')"
+        @click="restoreUploadModal"
+      >
+        <UploadSVG class="vuefinder__status-bar__upload-icon" />
+        <span>{{ t('Uploading') }}… {{ app.upload.overallPercent }}%</span>
+      </button>
       <slot
         name="actions"
         :path="currentPath.path"

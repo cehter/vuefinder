@@ -630,6 +630,15 @@ export class ArrayDriver extends BaseAdapter {
   configureUploader?(uppy: any, context: { getTargetPath: () => string }): void {
     if (!uppy) return;
 
+    // Dev/testing aid: append ?slowUpload=1 to the URL to make ArrayDriver/IndexedDBDriver
+    // uploads (which otherwise complete instantly, with no real transport to throttle)
+    // drag out over a few seconds with fake upload-progress ticks. Useful for exercising
+    // the "minimize modal, watch progress in the status bar" flow without a real backend.
+    const slowUploadEnabled =
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('slowUpload') === '1';
+    const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     // ArrayDriver has no network transport, so it must act as its own Uppy
     // uploader (there is nothing else that would emit upload-start/-success).
     uppy.addUploader(async (fileIDs: string[]) => {
@@ -651,6 +660,13 @@ export class ArrayDriver extends BaseAdapter {
           const segments = fullName.split('/').filter(Boolean);
           const name = segments.pop() || fullName;
           const dir = segments.length ? this.ensureDirPath(target, segments) : target;
+
+          if (slowUploadEnabled) {
+            for (let bytesUploaded = 10; bytesUploaded <= 90; bytesUploaded += 10) {
+              await sleep(300);
+              uppy.emit('upload-progress', file, { bytesUploaded, bytesTotal: 100 });
+            }
+          }
 
           const entry = this.makeFileEntry(dir, name, size, type);
           this.upsert(entry);

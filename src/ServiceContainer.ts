@@ -6,6 +6,7 @@ import { normalizeFeatures } from './features';
 import { version } from './../package.json';
 import { format as filesizeDefault, metricFormat as filesizeMetric } from './utils/filesize';
 import useModal from './composables/useModal';
+import { createUploadEngine } from './composables/useUploadEngine';
 import { createConfigStore } from './stores/config';
 import { createFilesStore } from './stores/files.ts';
 import { AdapterManager } from './adapters';
@@ -27,6 +28,15 @@ export default (props: VueFinderProps, options: Record<string, unknown>): any =>
     throw new Error('Driver is required for VueFinder');
   }
   const adapterManager = new AdapterManager(props.driver);
+
+  const i18n = useI18n(
+    storage,
+    initialLang as string,
+    emitter,
+    supportedLocales as Record<string, unknown>,
+    configStore
+  );
+  const filesize = configStore.get('metricUnits') ? filesizeMetric : filesizeDefault;
 
   return reactive({
     // app version
@@ -53,18 +63,24 @@ export default (props: VueFinderProps, options: Record<string, unknown>): any =>
     // storage
     storage: storage,
     // localization object
-    i18n: useI18n(
-      storage,
-      initialLang as string,
-      emitter,
-      supportedLocales as Record<string, unknown>,
-      configStore
-    ),
+    i18n,
     // modal state
     modal: useModal(configStore),
     // adapter for file operations (always wrapped with AdapterManager)
     // Use markRaw to prevent TanStack Query from being made reactive
     adapter: markRaw(adapterManager),
+    // upload queue/engine - created once so an upload keeps running (and can be
+    // reported on in the status bar) even while the upload modal is closed
+    upload: createUploadEngine({
+      fs: filesStore,
+      config: configStore,
+      adapter: adapterManager,
+      emitter,
+      t: i18n.t,
+      filesize,
+      customUploader: props.customUploader,
+      debug: props.debug ?? false,
+    }),
     // active features
     features: normalizeFeatures(props.features),
     // selection mode
@@ -75,7 +91,7 @@ export default (props: VueFinderProps, options: Record<string, unknown>): any =>
     // treeViewData - temp. opened folders
     treeViewData: [],
     // human readable file sizes
-    filesize: configStore.get('metricUnits') ? filesizeMetric : filesizeDefault,
+    filesize,
     // possible items of the context menu
     contextMenuItems: props.contextMenuItems,
     // expose custom uploader if provided

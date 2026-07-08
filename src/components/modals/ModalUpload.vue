@@ -439,7 +439,12 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
       >
         {{ t('Cancel') }}
       </button>
-      <button v-else type="button" class="vf-btn vf-btn-secondary" @click.prevent="close">
+      <button
+        type="button"
+        class="vf-btn vf-btn-secondary"
+        :title="uploading ? t('Upload continues in the background.') : undefined"
+        @click.prevent="close"
+      >
         {{ t('Close') }}
       </button>
 

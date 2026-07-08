@@ -1,30 +1,10 @@
 import { onMounted, onUnmounted, ref, type Ref } from 'vue';
 import { useApp } from '../composables/useApp';
-import Uppy from '@uppy/core';
-import { parse } from '../utils/filesize';
-import { useStore } from '@nanostores/vue';
 import { scanFiles } from '../utils/scanFiles';
-import type { CurrentPathState } from '../stores/files';
-import type { StoreValue } from 'nanostores';
+import { QUEUE_ENTRY_STATUS, type QueueEntry } from './useUploadEngine';
 
-export const QUEUE_ENTRY_STATUS = {
-  PENDING: 0,
-  CANCELED: 1,
-  UPLOADING: 2,
-  ERROR: 3,
-  DONE: 10,
-} as const;
-export type QueueEntryStatus = (typeof QUEUE_ENTRY_STATUS)[keyof typeof QUEUE_ENTRY_STATUS];
-
-export interface QueueEntry {
-  id: string;
-  name: string;
-  size: string;
-  status: QueueEntryStatus;
-  statusName: string;
-  percent: string | null;
-  originalFile: File;
-}
+export { QUEUE_ENTRY_STATUS };
+export type { QueueEntry };
 
 export interface UseUploadReturn {
   container: Ref<HTMLElement | null>;
@@ -49,26 +29,23 @@ export interface UseUploadReturn {
   renameEntry: (entry: QueueEntry, newName: string) => Promise<void>;
 }
 
-export default function useUpload(customUploader?: any): UseUploadReturn {
+// Thin, per-mount wrapper around the app's singleton upload engine (app.upload).
+// DOM refs and drag&drop wiring are local to this component instance; the actual
+// queue/Uppy state lives in the engine so it survives the modal being closed —
+// that's what lets an upload keep running in the background while "minimized".
+export default function useUpload(_customUploader?: any): UseUploadReturn {
   const app = useApp();
-  const { t } = app.i18n;
-  const fs = app.fs;
-  const currentPath: StoreValue<CurrentPathState> = useStore(fs.path);
-  const config = app.config;
-  const definitions = ref({ QUEUE_ENTRY_STATUS });
+  const engine = app.upload;
+
   const container = ref<HTMLElement | null>(null);
   const internalFileInput = ref<HTMLInputElement | null>(null);
   const internalFolderInput = ref<HTMLInputElement | null>(null);
   const pickFiles = ref<HTMLElement | null>(null);
   const pickFolders = ref<HTMLElement | null>(null);
-
-  const queue = ref<QueueEntry[]>([]);
-  const message = ref('');
-  const uploading = ref(false);
   const hasFilesInDropArea = ref(false);
-  const uploadTargetFolder = ref<any>(null);
 
-  let uppy: Uppy;
+  const openFileSelector = () => pickFiles.value?.click();
+  const close = () => app.modal.close();
 
   // Document-level drag event handlers
   const handleDocumentDragOver = (ev: DragEvent) => {
@@ -109,277 +86,20 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
           if (getAsEntry) {
             scanFiles((entry: any, file: File) => {
               const matched = trimFileName.exec((entry?.fullPath as string) || '');
-              addFile(file, matched ? matched[1] : file.name);
+              engine.addFile(file, matched ? matched[1] : file.name);
             }, getAsEntry);
           } else {
             const f = item.getAsFile?.();
-            if (f) addFile(f);
+            if (f) engine.addFile(f);
           }
         }
       });
     } else if (dt.files && dt.files.length) {
-      Array.from(dt.files).forEach((file) => addFile(file));
-    }
-  };
-
-  const findQueueEntryIndexById = (id: string) => queue.value.findIndex((item) => item.id === id);
-  const addFile = (file: File, name?: string) =>
-    uppy.addFile({ name: name || file.name, type: file.type, data: file, source: 'Local' });
-  const getClassNameForEntry = (entry: QueueEntry) =>
-    entry.status === QUEUE_ENTRY_STATUS.DONE
-      ? 'text-green-600'
-      : entry.status === QUEUE_ENTRY_STATUS.ERROR || entry.status === QUEUE_ENTRY_STATUS.CANCELED
-        ? 'text-red-600'
-        : '';
-  const getIconForEntry = (entry: QueueEntry) =>
-    entry.status === QUEUE_ENTRY_STATUS.DONE
-      ? '✓'
-      : entry.status === QUEUE_ENTRY_STATUS.ERROR || entry.status === QUEUE_ENTRY_STATUS.CANCELED
-        ? '!'
-        : '...';
-  const openFileSelector = () => pickFiles.value?.click();
-  const close = () => app.modal.close();
-
-  const upload = (targetFolder?: any) => {
-    if (
-      uploading.value ||
-      !queue.value.filter((entry) => entry.status !== QUEUE_ENTRY_STATUS.DONE).length
-    ) {
-      if (!uploading.value) message.value = t('Please select file to upload first.');
-      return;
-    }
-    message.value = '';
-
-    // Store the target folder for use in the upload event handler
-    uploadTargetFolder.value = targetFolder || currentPath.value;
-
-    // todo: will look into retrying failed uploads later
-    // uppy.retryAll();
-    uppy.upload();
-  };
-
-  const cancel = () => {
-    uppy.cancelAll();
-    queue.value.forEach((entry) => {
-      if (entry.status !== QUEUE_ENTRY_STATUS.DONE) {
-        entry.status = QUEUE_ENTRY_STATUS.CANCELED;
-        entry.statusName = t('Canceled');
-      }
-    });
-    uploading.value = false;
-  };
-
-  const remove = (file: QueueEntry) => {
-    if (uploading.value) return;
-    uppy.removeFile(file.id);
-    queue.value.splice(findQueueEntryIndexById(file.id), 1);
-  };
-
-  const clear = (onlySuccessful: boolean) => {
-    if (uploading.value) return;
-    uppy.cancelAll();
-    if (onlySuccessful) {
-      const retryQueue = queue.value.filter((entry) => entry.status !== QUEUE_ENTRY_STATUS.DONE);
-      queue.value = [];
-      retryQueue.forEach((entry) => addFile(entry.originalFile, entry.name));
-    } else {
-      queue.value = [];
-    }
-  };
-
-  const addExternalFiles = (files: (File | { file: File; name?: string })[]) => {
-    files.forEach((entry) => {
-      if (entry instanceof File) {
-        addFile(entry);
-      } else {
-        addFile(entry.file, entry.name);
-      }
-    });
-  };
-
-  const joinFolderAndName = (folder: string, name: string): string => {
-    if (folder.endsWith('://') || folder.endsWith('/')) return folder + name;
-    return folder + '/' + name;
-  };
-
-  const renameEntry = async (entry: QueueEntry, newName: string): Promise<void> => {
-    const trimmed = newName.trim();
-    if (uploading.value) return;
-    if (!trimmed) return;
-    if (trimmed.includes('/') || trimmed.includes('\\')) {
-      message.value = t('Name cannot contain slashes.');
-      return;
-    }
-
-    // Preserve any subfolder prefix from folder uploads (e.g. "sub/file.txt").
-    const segments = entry.name.split('/');
-    segments[segments.length - 1] = trimmed;
-    const newEntryName = segments.join('/');
-    if (newEntryName === entry.name) return;
-
-    if (entry.status === QUEUE_ENTRY_STATUS.DONE) {
-      const targetFolderPath = uploadTargetFolder.value?.path || currentPath.value.path;
-      const itemPath = joinFolderAndName(targetFolderPath, entry.name);
-      const parentSegments = entry.name.split('/');
-      parentSegments.pop();
-      const parentPath = parentSegments.length
-        ? joinFolderAndName(targetFolderPath, parentSegments.join('/'))
-        : targetFolderPath;
-
-      try {
-        await app.adapter.rename({ path: parentPath, item: itemPath, name: trimmed });
-        entry.name = newEntryName;
-        app.adapter.invalidateListQuery(targetFolderPath);
-        if (targetFolderPath === currentPath.value.path) {
-          app.adapter.open(targetFolderPath);
-        }
-      } catch (e: any) {
-        message.value = e?.message || t('Failed to rename');
-      }
-      return;
-    }
-
-    // Pending / error / canceled — rename locally by re-adding to uppy with the new name.
-    const idx = findQueueEntryIndexById(entry.id);
-    if (idx === -1) return;
-    const file = entry.originalFile;
-    const originalName = entry.name;
-
-    uppy.removeFile(entry.id);
-    queue.value.splice(idx, 1);
-
-    let newId: string | undefined;
-    try {
-      newId = addFile(file, newEntryName);
-    } catch (e: any) {
-      // Restore the original entry if uppy rejects the new name (restrictions, duplicate, ...).
-      message.value = e?.message || t('Failed to rename');
-      try {
-        addFile(file, originalName);
-      } catch {
-        // Original add also failed; nothing else to recover.
-      }
-      return;
-    }
-
-    if (!newId) return;
-    const newIdx = findQueueEntryIndexById(newId);
-    if (newIdx !== -1 && newIdx !== idx) {
-      const moved = queue.value.splice(newIdx, 1)[0];
-      if (moved) queue.value.splice(idx, 0, moved);
+      Array.from(dt.files).forEach((file) => engine.addFile(file));
     }
   };
 
   onMounted(() => {
-    uppy = new Uppy({
-      debug: app.debug,
-      restrictions: { maxFileSize: parse(config.get('maxFileSize') ?? '10mb') },
-      locale: app.i18n.t('uppy'),
-      onBeforeFileAdded: (file: any, files: any) => {
-        const duplicated = files[file.id] != null;
-        if (duplicated) {
-          const i = findQueueEntryIndexById(file.id);
-          if (queue.value[i]?.status === QUEUE_ENTRY_STATUS.PENDING) {
-            message.value = uppy.i18n('noDuplicates', { fileName: file.name });
-          }
-          queue.value = queue.value.filter((entry) => entry.id !== file.id);
-        }
-        queue.value.push({
-          id: file.id,
-          name: file.name,
-          size: app.filesize(file.size),
-          status: QUEUE_ENTRY_STATUS.PENDING,
-          statusName: t('Pending upload'),
-          percent: null,
-          originalFile: file.data,
-        });
-        return true;
-      },
-    });
-
-    const context = {
-      getTargetPath: () => {
-        const target = uploadTargetFolder.value || currentPath.value;
-        return target.path;
-      },
-    };
-
-    if (customUploader) {
-      customUploader(uppy, context);
-    } else if (app.adapter.getDriver().configureUploader) {
-      app.adapter.getDriver().configureUploader(uppy, context);
-    } else {
-      throw new Error('No uploader configured');
-    }
-
-    uppy.on('restriction-failed', (upFile: any, error: any) => {
-      const entry = queue.value[findQueueEntryIndexById(upFile.id)];
-      if (entry) remove(entry);
-      message.value = error.message;
-    });
-
-    uppy.on('upload-start', (upFiles: any) => {
-      upFiles.forEach((upFile: any) => {
-        const entry = queue.value[findQueueEntryIndexById(upFile.id)];
-        if (entry) {
-          entry.status = QUEUE_ENTRY_STATUS.UPLOADING;
-          entry.statusName = t('Uploading');
-          entry.percent = '0%';
-        }
-      });
-    });
-
-    uppy.on('upload-progress', (upFile: any, progress: any) => {
-      const total = progress.bytesTotal ?? 1;
-      const p = Math.floor((progress.bytesUploaded / total) * 100);
-      const idx = findQueueEntryIndexById(upFile.id);
-      if (idx !== -1 && queue.value[idx]) {
-        queue.value[idx].percent = `${p}%`;
-      }
-    });
-
-    uppy.on('upload-success', (upFile: any) => {
-      const entry = queue.value[findQueueEntryIndexById(upFile.id)];
-      if (!entry) return;
-      entry.status = QUEUE_ENTRY_STATUS.DONE;
-      entry.statusName = t('Done');
-    });
-
-    uppy.on('upload-error', (upFile: any, error: any) => {
-      const entry = queue.value[findQueueEntryIndexById(upFile.id)];
-      if (!entry) return;
-      entry.percent = null;
-      entry.status = QUEUE_ENTRY_STATUS.ERROR;
-      entry.statusName = error?.isNetworkError
-        ? t('Network Error, Unable establish connection to the server or interrupted.')
-        : error?.message || t('Unknown Error');
-    });
-
-    uppy.on('error', (error: any) => {
-      message.value = error.message;
-      uploading.value = false;
-    });
-
-    uppy.on('complete', (result: any) => {
-      uploading.value = false;
-
-      // Use the target folder for refreshing the file list
-      const targetPath = uploadTargetFolder.value || currentPath.value;
-
-      // Refresh the target folder and emit upload complete
-      app.adapter.invalidateListQuery(targetPath.path);
-      app.adapter.open(targetPath.path);
-
-      // Get uploaded file names from queue
-      const uploadedFiles = queue.value
-        .filter(
-          (entry) =>
-            entry.status === QUEUE_ENTRY_STATUS.DONE && result.successful.includes(entry.id)
-        )
-        .map((entry) => entry.name);
-      app.emitter.emit('vf-upload-complete', uploadedFiles);
-    });
-
     // Event listeners
     pickFiles.value?.addEventListener('click', () => internalFileInput.value?.click());
     pickFolders.value?.addEventListener('click', () => internalFolderInput.value?.click());
@@ -395,7 +115,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
       const target = evt.target as HTMLInputElement;
       const files = target.files;
       if (!files) return;
-      for (const file of files) addFile(file, file.webkitRelativePath || undefined);
+      for (const file of files) engine.addFile(file, file.webkitRelativePath || undefined);
       target.value = '';
     };
 
@@ -418,20 +138,20 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
     internalFolderInput,
     pickFiles,
     pickFolders,
-    queue,
-    message,
-    uploading,
+    queue: engine.queue,
+    message: engine.message,
+    uploading: engine.uploading,
     hasFilesInDropArea,
-    definitions,
+    definitions: engine.definitions,
     openFileSelector,
-    upload,
-    cancel,
-    remove,
-    clear,
+    upload: engine.upload,
+    cancel: engine.cancel,
+    remove: engine.remove,
+    clear: engine.clear,
     close,
-    getClassNameForEntry,
-    getIconForEntry,
-    addExternalFiles,
-    renameEntry,
+    getClassNameForEntry: engine.getClassNameForEntry,
+    getIconForEntry: engine.getIconForEntry,
+    addExternalFiles: engine.addExternalFiles,
+    renameEntry: engine.renameEntry,
   };
 }

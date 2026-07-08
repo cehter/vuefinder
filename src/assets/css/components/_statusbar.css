@@ -29,7 +29,15 @@
 }
 
 .vuefinder__status-bar__actions {
-  @apply flex items-center justify-end leading-5;
+  @apply flex items-center justify-end gap-2 leading-5;
+}
+
+.vuefinder__status-bar__upload {
+  @apply flex cursor-pointer items-center gap-1 rounded border border-(--vf-border-primary) bg-(--vf-bg-primary) px-2 py-0.5 text-(--vf-text-secondary);
+}
+
+.vuefinder__status-bar__upload-icon {
+  @apply h-3.5 w-3.5;
 }
 
 /* Caret indicator (up/down chevrons) */
