@@ -1,5 +1,7 @@
 export interface ExternalFile {
     name: string;
+    /** Path relative to the dropped item, e.g. "MyFolder/sub/file.txt". Preserves the folder structure. */
+    relativePath: string;
     size: number;
     type: string;
     lastModified: Date;
@@ -9,6 +11,7 @@ export declare function useExternalDragDrop(): {
     isDraggingExternal: import("vue").Ref<boolean, boolean>;
     externalFiles: import("vue").Ref<{
         name: string;
+        relativePath: string;
         size: number;
         type: string;
         lastModified: Date;
@@ -26,6 +29,7 @@ export declare function useExternalDragDrop(): {
         };
     }[], ExternalFile[] | {
         name: string;
+        relativePath: string;
         size: number;
         type: string;
         lastModified: Date;
@@ -47,6 +51,7 @@ export declare function useExternalDragDrop(): {
     handleDragLeave: (e: DragEvent) => void;
     handleDrop: (e: DragEvent) => Promise<{
         name: string;
+        relativePath: string;
         size: number;
         type: string;
         lastModified: Date;
