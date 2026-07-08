@@ -42,6 +42,7 @@ export interface NonPersistenceConfigState {
     notificationDuration: number;
     notificationVisibleToasts: number;
     notificationRichColors: boolean;
+    closeUploadModalOnSubmit: boolean;
 }
 /**
  * Combined config state (for convenience)

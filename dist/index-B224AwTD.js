@@ -303,7 +303,8 @@ const Ft = {
   notificationPosition: "bottom-center",
   notificationDuration: 3e3,
   notificationVisibleToasts: 4,
-  notificationRichColors: !0
+  notificationRichColors: !0,
+  closeUploadModalOnSubmit: !1
 }, Ko = new Set(
   Object.keys(Et)
 );
@@ -2189,7 +2190,7 @@ const da = { class: "vuefinder__text-preview" }, ca = { class: "vuefinder__text-
   emits: ["success"],
   setup(s, { emit: e }) {
     const t = Ln({
-      loader: () => import("./CodeMirrorEditor-B1ig00L7.js").then((f) => f.C),
+      loader: () => import("./CodeMirrorEditor-DeFReO_j.js").then((f) => f.C),
       delay: 100
     }), n = e, i = I(""), d = I(""), r = I(!1), l = I(!1), u = ie(), v = Be(u), { enabled: b } = Ve(), { t: h } = u.i18n;
     we(async () => {
@@ -2281,7 +2282,7 @@ const da = { class: "vuefinder__text-preview" }, ca = { class: "vuefinder__text-
   emits: ["success"],
   setup(s, { emit: e }) {
     const t = Ln({
-      loader: () => import("./CodeMirrorEditor-B1ig00L7.js").then((Z) => Z.C),
+      loader: () => import("./CodeMirrorEditor-DeFReO_j.js").then((Z) => Z.C),
       delay: 100
     }), n = e, i = I(""), d = I(""), r = vt([]), l = vt([]), u = I(null), v = I(!1), b = I(!1), h = z(() => r.value.length > Ht), _ = z(() => h.value ? r.value.slice(0, Ht) : r.value), k = ie(), w = Be(k), { enabled: $ } = Ve(), { t: m } = k.i18n;
     async function g(Z) {
@@ -5855,7 +5856,7 @@ const Yd = { class: "vuefinder__upload-modal__content relative" }, Xd = { class:
       }
       await G(H, D), R();
     }, V = () => {
-      C(d.value);
+      C(d.value), e.config.get("closeUploadModalOnSubmit") && q();
     };
     we(() => {
       e.emitter.on("vf-external-files-dropped", (H) => {
