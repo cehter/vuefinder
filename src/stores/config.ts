@@ -53,6 +53,7 @@ export interface NonPersistenceConfigState {
   notificationDuration: number;
   notificationVisibleToasts: number;
   notificationRichColors: boolean;
+  closeUploadModalOnSubmit: boolean;
 }
 
 /**
@@ -113,6 +114,7 @@ const DEFAULT_NON_PERSISTENCE_STATE: NonPersistenceConfigState = {
   notificationDuration: 3000,
   notificationVisibleToasts: 4,
   notificationRichColors: true,
+  closeUploadModalOnSubmit: false,
 };
 
 // Cached non-persistence keys for performance

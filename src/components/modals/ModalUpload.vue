@@ -122,6 +122,9 @@ const submitEdit = async (entry: QueueEntry) => {
 const upload = () => {
   // Update the upload function to use the selected target folder
   originalUpload(target.value);
+  if (app.config.get('closeUploadModalOnSubmit')) {
+    close();
+  }
 };
 
 // Dışarıdan gelen dosyaları dinle
