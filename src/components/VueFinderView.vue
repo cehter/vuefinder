@@ -202,7 +202,7 @@ const handleExternalDrop = async (e: DragEvent) => {
     setTimeout(() => {
       app.emitter.emit(
         'vf-external-files-dropped',
-        droppedFiles.map((f) => f.file)
+        droppedFiles.map((f) => ({ file: f.file, name: f.relativePath }))
       );
     }, 100);
   }

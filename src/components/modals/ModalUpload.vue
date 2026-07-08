@@ -127,7 +127,7 @@ const upload = () => {
 // Dışarıdan gelen dosyaları dinle
 onMounted(() => {
   app.emitter.on('vf-external-files-dropped', (event: unknown) => {
-    addExternalFiles(event as File[]);
+    addExternalFiles(event as { file: File; name?: string }[]);
   });
 });
 

@@ -45,7 +45,7 @@ export interface UseUploadReturn {
   close: () => void;
   getClassNameForEntry: (entry: QueueEntry) => string;
   getIconForEntry: (entry: QueueEntry) => string;
-  addExternalFiles: (files: File[]) => void;
+  addExternalFiles: (files: (File | { file: File; name?: string })[]) => void;
   renameEntry: (entry: QueueEntry, newName: string) => Promise<void>;
 }
 
@@ -187,9 +187,13 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
     }
   };
 
-  const addExternalFiles = (files: File[]) => {
-    files.forEach((file) => {
-      addFile(file);
+  const addExternalFiles = (files: (File | { file: File; name?: string })[]) => {
+    files.forEach((entry) => {
+      if (entry instanceof File) {
+        addFile(entry);
+      } else {
+        addFile(entry.file, entry.name);
+      }
     });
   };
 
@@ -391,7 +395,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
       const target = evt.target as HTMLInputElement;
       const files = target.files;
       if (!files) return;
-      for (const file of files) addFile(file);
+      for (const file of files) addFile(file, file.webkitRelativePath || undefined);
       target.value = '';
     };
 
