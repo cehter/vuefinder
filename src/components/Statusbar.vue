@@ -33,10 +33,20 @@ const totalSelectedSize = computed(() => {
   }, 0);
 });
 
+const totalFileSize = computed(() => {
+  if (!sortedFiles.value || sortedFiles.value.length === 0) return 0;
+
+  return sortedFiles.value.reduce((total: number, item: any) => {
+    return total + (item.file_size || 0);
+  }, 0);
+});
+
 const storagesList = computed(() => storages.value as string[]);
 const sortedFilesList = computed(() => sortedFiles.value as any[]);
 const selectedCountNum = computed(() => (selectedCount.value as number) || 0);
 const selectedItemsList = computed(() => selectedItems.value || []);
+
+console.log('sortedFilesList', sortedFilesList);
 </script>
 
 <template>
@@ -60,10 +70,15 @@ const selectedItemsList = computed(() => selectedItems.value || []);
         <span class="vuefinder__status-bar__storage-caret" aria-hidden="true"></span>
       </div>
       <div class="vuefinder__status-bar__info space-x-2">
-        <span v-if="selectedCountNum === 0">{{ sortedFilesList.length }} {{ t('items') }}</span>
+        <span v-if="selectedCountNum === 0">
+          {{ sortedFilesList.length }} {{ t('items') }}
+          <span class="vuefinder__status-bar__size">
+            {{ app.filesize(totalFileSize) }}
+          </span>
+        </span>
         <span v-else>
           {{ selectedCountNum }} {{ t('selected') }}
-          <span v-if="totalSelectedSize" class="vuefinder__status-bar__size">
+          <span class="vuefinder__status-bar__size">
             {{ app.filesize(totalSelectedSize) }}
           </span>
         </span>
