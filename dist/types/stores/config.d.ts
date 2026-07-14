@@ -31,6 +31,7 @@ export interface NonPersistenceConfigState {
     maxFileSize: number | string | null;
     showMenuBar: boolean;
     showToolbar: boolean;
+    showBreadcrumbBar: boolean;
     gridItemWidth: number;
     gridItemHeight: number;
     gridItemGap: number;

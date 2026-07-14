@@ -125,4 +125,14 @@ export interface FsData {
     files: DirEntry[];
     read_only?: boolean;
 }
+export interface MenuItem {
+    id?: string;
+    label?: string;
+    type?: 'separator';
+    items?: MenuItem[];
+    action?: () => void;
+    enabled?: () => boolean;
+    hidden?: () => boolean;
+    checked?: () => boolean;
+}
 export type { FeatureName, FeaturesConfig, FeaturesPreset } from './features';
