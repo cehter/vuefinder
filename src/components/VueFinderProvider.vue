@@ -90,8 +90,8 @@ onBeforeUnmount(() => {
     <template #toolbar-items="slotProps">
       <slot name="toolbar-items" v-bind="slotProps" />
     </template>
-    <template #breadcrumb-items="slotProps">
-      <slot name="breadcrumb-items" v-bind="slotProps" />
+    <template #breadcrumb-actions="slotProps">
+      <slot name="breadcrumb-actions" v-bind="slotProps" />
     </template>
   </VueFinderView>
 </template>

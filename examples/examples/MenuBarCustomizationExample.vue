@@ -114,12 +114,17 @@ const computedConfig = computed(() => ({
         </template>
       </vue-finder>
 
-      <!-- Mode 4: MenuBar, Toolbar and Breadcrumb are each replaced
-           independently via their own slot (`menu-items`, `toolbar-items`,
-           `breadcrumb-items`) - three separate custom components, three
-           separate slots, all still shown (showMenuBar/showToolbar/
-           showBreadcrumbBar stay true; the slot content replaces what's
-           *inside* each bar, it doesn't hide the bar itself). -->
+      <!-- Mode 4: MenuBar, Toolbar and the Breadcrumb's action buttons are
+           each replaced independently via their own slot (`menu-items`,
+           `toolbar-items`, `breadcrumb-actions`) - three separate custom
+           components, three separate slots, all still shown
+           (showMenuBar/showToolbar/showBreadcrumbBar stay true; the slot
+           content replaces what's *inside* each bar, it doesn't hide the
+           bar itself). Note: `breadcrumb-actions` only covers the buttons
+           shown before the path (tree-view toggle, go up, refresh) - the
+           path container itself (overflow measurement, drag & drop, hidden-
+           item dropdown, path-copy mode) is intentionally not slotted, since
+           reimplementing it wouldn't make sense. -->
       <vue-finder
         v-else
         id="menubar_custom_all_slots"
@@ -133,8 +138,8 @@ const computedConfig = computed(() => ({
         <template #toolbar-items>
           <div class="all-slots-chip">Custom Toolbar</div>
         </template>
-        <template #breadcrumb-items>
-          <div class="all-slots-chip">Custom Breadcrumb</div>
+        <template #breadcrumb-actions>
+          <div class="all-slots-chip">Custom Breadcrumb Actions</div>
         </template>
       </vue-finder>
     </div>

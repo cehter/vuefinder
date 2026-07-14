@@ -631,19 +631,22 @@ describe('VueFinder', () => {
       wrapper.unmount();
     });
 
-    it('replaces the default Breadcrumb rendering via the "breadcrumb-items" slot', async () => {
+    it('replaces the action buttons (tree-view/go-up/refresh) via the "breadcrumb-actions" slot, keeping the path container', async () => {
       const wrapper = mount(VueFinderProvider, {
-        props: { ...defaultProps, id: 'breadcrumb-items-slot' },
+        props: { ...defaultProps, id: 'breadcrumb-actions-slot' },
         global: defaultGlobal,
         slots: {
-          'breadcrumb-items': `<div class="custom-breadcrumb">custom breadcrumb</div>`,
+          'breadcrumb-actions': `<div class="custom-breadcrumb-actions">custom actions</div>`,
         },
       });
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      expect(wrapper.find('.custom-breadcrumb').exists()).toBe(true);
-      expect(wrapper.find('.vuefinder__breadcrumb__path-container').exists()).toBe(false);
+      expect(wrapper.find('.custom-breadcrumb-actions').exists()).toBe(true);
+      // Default action buttons are replaced...
+      expect(wrapper.find('.vuefinder__breadcrumb__toggle-tree').exists()).toBe(false);
+      // ...but the complex path container itself is never slotted away.
+      expect(wrapper.find('.vuefinder__breadcrumb__path-container').exists()).toBe(true);
 
       wrapper.unmount();
     });

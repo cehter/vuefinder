@@ -258,8 +258,8 @@ const handleExternalDrop = async (e: DragEvent) => {
           </template>
         </Toolbar>
         <Breadcrumb v-if="configState.showBreadcrumbBar">
-          <template #breadcrumb-items="slotProps">
-            <slot name="breadcrumb-items" v-bind="slotProps" />
+          <template #breadcrumb-actions="slotProps">
+            <slot name="breadcrumb-actions" v-bind="slotProps" />
           </template>
         </Breadcrumb>
         <div class="vuefinder__main__content">

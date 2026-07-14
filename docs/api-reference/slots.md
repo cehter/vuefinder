@@ -16,7 +16,7 @@ Complete reference of all VueFinder slots.
 | `menu-items`     | `{ menuItems, handleMenuAction }`        | Replace the default File/Edit/View/Go/Help menu bar layout     |
 | `menubar-end`    | `{ menuItems }`                          | Add content after the default menu bar entries                 |
 | `toolbar-items`  | none                                     | Replace the entire toolbar                                     |
-| `breadcrumb-items` | none                                   | Replace the entire breadcrumb bar                               |
+| `breadcrumb-actions` | none                                 | Replace the action buttons before the breadcrumb path (tree-view toggle, go up, refresh) |
 
 ## Slot Details
 
@@ -88,21 +88,27 @@ toggles, ...).
 </template>
 ```
 
-### `breadcrumb-items`
+### `breadcrumb-actions`
 
-Replace the entire breadcrumb bar. No scoped props are passed; a custom
-component should call `useBreadcrumbActions()` to reuse the built-in
-navigation actions (refresh, go up, toggle tree view, copy path) and reactive
-`currentPath`.
+Replace the action buttons shown before the breadcrumb path (tree-view
+toggle, go up, refresh/cancel). No scoped props are passed; a custom
+component should call `useBreadcrumbActions()` to reuse the built-in actions
+(refresh, go up, toggle tree view) and reactive `currentPath`.
+
+The path container itself (breadcrumb trail with overflow measurement, drag
+& drop, the hidden-item dropdown, and path-copy mode) is **not** slotted -
+it's complex enough that reimplementing it wouldn't make sense, so it always
+renders as-is.
 
 ```vue
-<template #breadcrumb-items>
-  <MyCustomBreadcrumb />
+<template #breadcrumb-actions>
+  <MyCustomBreadcrumbActions />
 </template>
 ```
 
-Combine `toolbar-items`, `breadcrumb-items` and `menu-items` (with
-`showToolbar`/`showBreadcrumbBar` set to `false`) to merge everything into a
-single custom bar - see the "MenuBar Customization" example.
+Combine `toolbar-items`, `breadcrumb-actions` and `menu-items` to merge menu,
+toolbar and breadcrumb-action functionality into a single custom bar (set
+`showToolbar: false` and, if you don't need the path trail at all,
+`showBreadcrumbBar: false`) - see the "MenuBar Customization" example.
 
 For usage examples and common patterns, see [Guide - Slots](../guide/slots.md).

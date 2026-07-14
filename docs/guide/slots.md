@@ -168,15 +168,20 @@ actions (new folder, upload, rename, delete, archive, view toggles, ...).
 </template>
 ```
 
-### `breadcrumb-items` Slot
+### `breadcrumb-actions` Slot
 
-Replace the entire breadcrumb bar. No scoped props are passed - a custom
-component calls `useBreadcrumbActions()` to reuse the built-in navigation
-actions (refresh, go up, toggle tree view, copy path) and the reactive
-`currentPath`.
+Replace the action buttons shown before the breadcrumb path - tree-view
+toggle, go up, refresh/cancel. No scoped props are passed - a custom
+component calls `useBreadcrumbActions()` to reuse the built-in actions
+(refresh, go up, toggle tree view) and the reactive `currentPath`.
+
+The path container itself (the breadcrumb trail, with overflow measurement,
+drag & drop, the hidden-item dropdown, and path-copy mode) is intentionally
+**not** slotted - it's complex enough that reimplementing it wouldn't make
+sense, so it always renders as-is, right after this slot.
 
 ```vue
-<!-- MyBreadcrumb.vue -->
+<!-- MyBreadcrumbActions.vue -->
 <script setup>
 import { useBreadcrumbActions } from 'vuefinder';
 
@@ -184,22 +189,24 @@ const breadcrumb = useBreadcrumbActions();
 </script>
 
 <template>
-  <div class="my-breadcrumb">
-    <span>{{ breadcrumb.currentPath.path }}</span>
-    <button @click="breadcrumb.refresh()">Refresh</button>
+  <div class="my-breadcrumb-actions">
+    <button @click="breadcrumb.toggleTreeView()">Tree</button>
     <button @click="breadcrumb.goUp()">Go Up</button>
+    <button @click="breadcrumb.refresh()">Refresh</button>
   </div>
 </template>
 ```
 
 ```vue
-<template #breadcrumb-items>
-  <MyBreadcrumb />
+<template #breadcrumb-actions>
+  <MyBreadcrumbActions />
 </template>
 ```
 
-To merge everything into a single custom bar, combine `menu-items` with
-`showToolbar: false` and `showBreadcrumbBar: false` in the `config` prop - see
-the "MenuBar Customization" example for a full walkthrough.
+To merge menu bar, toolbar and breadcrumb actions into a single custom bar,
+combine `menu-items` with `showToolbar: false` in the `config` prop (add
+`showBreadcrumbBar: false` too if you don't need the default path trail
+alongside it) - see the "MenuBar Customization" example for a full
+walkthrough.
 
 For complete slot reference, see [API Reference - Slots](../api-reference/slots.md).
