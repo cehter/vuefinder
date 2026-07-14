@@ -7,12 +7,20 @@ declare var __VLS_8: {
     handleMenuAction: (action?: () => void) => void;
 }, __VLS_14: {
     menuItems: import("../types").MenuItem[];
-}, __VLS_23: {}, __VLS_32: {}, __VLS_46: {
+}, __VLS_23: {}, __VLS_32: {}, __VLS_41: {
+    pinnedFolders: import("../types").PinnedFolder[];
+    pinnedFoldersOpened: any;
+    togglePinnedFoldersOpened: () => void;
+    removePin: (item: import("../types").PinnedFolder) => void;
+    storages: any;
+    currentPath: any;
+    openPath: (path: string) => void;
+}, __VLS_50: {
     app: any;
     config: any;
     item: DirEntry;
     view: "list" | "grid" | undefined;
-}, __VLS_55: {
+}, __VLS_59: {
     path: any;
     count: number;
     selected: any;
@@ -28,9 +36,11 @@ type __VLS_Slots = {} & {
 } & {
     'breadcrumb-actions'?: (props: typeof __VLS_32) => any;
 } & {
-    icon?: (props: typeof __VLS_46) => any;
+    'tree-view'?: (props: typeof __VLS_41) => any;
 } & {
-    'status-bar'?: (props: typeof __VLS_55) => any;
+    icon?: (props: typeof __VLS_50) => any;
+} & {
+    'status-bar'?: (props: typeof __VLS_59) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent<VueFinderProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     error: (...args: any[]) => void;

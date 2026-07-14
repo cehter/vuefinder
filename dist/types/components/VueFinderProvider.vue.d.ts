@@ -15,7 +15,15 @@ declare var __VLS_9: {
     handleMenuAction: (action?: () => void) => void;
 }, __VLS_21: {
     menuItems: import("../types").MenuItem[];
-}, __VLS_24: {}, __VLS_27: {};
+}, __VLS_24: {}, __VLS_27: {}, __VLS_30: {
+    pinnedFolders: import("../types").PinnedFolder[];
+    pinnedFoldersOpened: any;
+    togglePinnedFoldersOpened: () => void;
+    removePin: (item: import("../types").PinnedFolder) => void;
+    storages: any;
+    currentPath: any;
+    openPath: (path: string) => void;
+};
 type __VLS_Slots = {} & {
     icon?: (props: typeof __VLS_9) => any;
 } & {
@@ -30,6 +38,8 @@ type __VLS_Slots = {} & {
     'toolbar-items'?: (props: typeof __VLS_24) => any;
 } & {
     'breadcrumb-actions'?: (props: typeof __VLS_27) => any;
+} & {
+    'tree-view'?: (props: typeof __VLS_30) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent<VueFinderProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<VueFinderProps> & Readonly<{}>, {
     debug: boolean;
