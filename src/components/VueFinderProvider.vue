@@ -93,5 +93,8 @@ onBeforeUnmount(() => {
     <template #breadcrumb-actions="slotProps">
       <slot name="breadcrumb-actions" v-bind="slotProps" />
     </template>
+    <template #tree-view="slotProps">
+      <slot name="tree-view" v-bind="slotProps" />
+    </template>
   </VueFinderView>
 </template>

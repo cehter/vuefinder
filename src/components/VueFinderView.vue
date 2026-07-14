@@ -263,7 +263,11 @@ const handleExternalDrop = async (e: DragEvent) => {
           </template>
         </Breadcrumb>
         <div class="vuefinder__main__content">
-          <TreeView />
+          <TreeView>
+            <template #tree-view="slotProps">
+              <slot name="tree-view" v-bind="slotProps" />
+            </template>
+          </TreeView>
           <Explorer :on-file-dclick="props.onFileDclick" :on-folder-dclick="props.onFolderDclick">
             <template #icon="slotProps">
               <slot name="icon" v-bind="slotProps" />

@@ -13,6 +13,7 @@ import {
 import { useVueFinder } from './composables/useVueFinder';
 import { useMenuItems } from './composables/useMenuItems';
 import { useBreadcrumbActions } from './composables/useBreadcrumbActions';
+import { useTreeViewActions } from './composables/useTreeViewActions';
 
 type VueFinderOptions = {
   i18n?: Record<string, unknown>;
@@ -37,7 +38,7 @@ export const VueFinderPlugin = {
 export default VueFinderPlugin;
 
 export { VueFinder, VueFinderProvider, contextMenuItems, ContextMenuIds };
-export { useVueFinder, useMenuItems, useBreadcrumbActions };
+export { useVueFinder, useMenuItems, useBreadcrumbActions, useTreeViewActions };
 
 export { RemoteDriver, ArrayDriver, IndexedDBDriver, BaseAdapter, parseBackendError };
 

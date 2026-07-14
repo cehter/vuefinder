@@ -19,6 +19,7 @@ import SelectionFilterExample from './examples/SelectionFilterExample.vue';
 import FeaturesExample from './examples/FeaturesExample.vue';
 import UIVisibilityExample from './examples/UIVisibilityExample.vue';
 import MenuBarCustomizationExample from './examples/MenuBarCustomizationExample.vue';
+import TreeViewCustomizationExample from './examples/TreeViewCustomizationExample.vue';
 import ItemSizeExample from './examples/ItemSizeExample.vue';
 import MultilangExample from './examples/MultilangExample.vue';
 import ComposableApiExample from './examples/ComposableApiExample.vue';
@@ -137,6 +138,7 @@ const examples = {
   features: 'Features Configuration Demo',
   uiVisibility: 'UI Visibility Settings Demo',
   menuBarCustomization: 'MenuBar Customization (Slots Demo)',
+  treeViewCustomization: 'TreeView Customization (Slots Demo)',
   itemSize: 'Item Size & Spacing Configuration',
   multilang: 'Multilang File Manager Demo',
 };
@@ -439,6 +441,13 @@ onUnmounted(() => {
 
       <MenuBarCustomizationExample
         v-if="example === 'menuBarCustomization'"
+        :driver="driver"
+        :config="{ ...config, theme: currentTheme }"
+        :features="features"
+      />
+
+      <TreeViewCustomizationExample
+        v-if="example === 'treeViewCustomization'"
         :driver="driver"
         :config="{ ...config, theme: currentTheme }"
         :features="features"

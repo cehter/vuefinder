@@ -469,6 +469,54 @@ describe('VueFinder', () => {
     });
   });
 
+  describe('TreeView customization', () => {
+    it('renders the default pinned-folders header and storage list when unslotted', async () => {
+      const wrapper = mount(VueFinderProvider, {
+        props: { ...defaultProps, id: 'treeview-default' },
+        global: defaultGlobal,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(wrapper.find('.vuefinder__treeview__header').exists()).toBe(true);
+      expect(wrapper.find('.vuefinder__treeview__storage').exists()).toBe(true);
+      expect(wrapper.find('.custom-tree-view').exists()).toBe(false);
+
+      wrapper.unmount();
+    });
+
+    it('replaces the default rendering via the "tree-view" scoped slot', async () => {
+      const wrapper = mount(VueFinderProvider, {
+        props: { ...defaultProps, id: 'treeview-slot' },
+        global: defaultGlobal,
+        slots: {
+          'tree-view': `<template #tree-view="{ storages, openPath }">
+            <div class="custom-tree-view">
+              <button
+                v-for="storage in storages"
+                :key="storage"
+                class="custom-tree-view__storage"
+                @click="openPath(storage + '://')"
+              >{{ storage }}</button>
+            </div>
+          </template>`,
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      const custom = wrapper.find('.custom-tree-view');
+      expect(custom.exists()).toBe(true);
+      expect(wrapper.find('.custom-tree-view__storage').text()).toBe('local');
+
+      // Default rendering must be fully replaced, not just supplemented.
+      expect(wrapper.find('.vuefinder__treeview__header').exists()).toBe(false);
+      expect(wrapper.find('.vuefinder__treeview__storage').exists()).toBe(false);
+
+      wrapper.unmount();
+    });
+  });
+
   describe('Multiple Instances', () => {
     it('should support multiple independent instances', async () => {
       const { useApp } = await import('../composables/useApp');
