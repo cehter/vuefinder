@@ -108,4 +108,98 @@ import PDFIcon from './PDFIcon.vue';
 
 If the condition doesn't match, the default icon will be shown automatically.
 
+### MenuBar Slots: `menubar-start`, `menu-items`, `menubar-end`
+
+Add content around the default menu bar, or replace it entirely.
+
+**Scoped Props (all three):**
+
+- `menuItems` - `MenuItem[]` - the default File/Edit/View/Go/Help structure
+- `handleMenuAction` - only passed to `menu-items` - closes the open dropdown, then runs the action
+
+#### Example: Add a button after the default menus
+
+```vue
+<template>
+  <vue-finder id="menubar-extra" :driver="driver">
+    <template #menubar-end="{ menuItems }">
+      <div class="menubar-chip">{{ menuItems.length }} menus</div>
+    </template>
+  </vue-finder>
+</template>
+```
+
+#### Example: Fully replace the menu bar layout
+
+A custom component doesn't have to rely on the scoped props - it can call
+`useMenuItems()` directly to get the exact same data (and modal-opening
+actions) `MenuBar.vue` uses internally:
+
+```vue
+<!-- MyMenuBar.vue -->
+<script setup>
+import { useMenuItems } from 'vuefinder';
+
+const { menuItems } = useMenuItems();
+</script>
+
+<template>
+  <div class="my-menu-bar">
+    <button v-for="menu in menuItems" :key="menu.id">{{ menu.label }}</button>
+  </div>
+</template>
+```
+
+```vue
+<template #menu-items>
+  <MyMenuBar />
+</template>
+```
+
+### `toolbar-items` Slot
+
+Replace the entire toolbar. No scoped props are passed - a custom component
+calls `useMenuItems()`/`useFeature()`/`useApp()` itself to reuse the built-in
+actions (new folder, upload, rename, delete, archive, view toggles, ...).
+
+```vue
+<template #toolbar-items>
+  <MyCustomToolbar />
+</template>
+```
+
+### `breadcrumb-items` Slot
+
+Replace the entire breadcrumb bar. No scoped props are passed - a custom
+component calls `useBreadcrumbActions()` to reuse the built-in navigation
+actions (refresh, go up, toggle tree view, copy path) and the reactive
+`currentPath`.
+
+```vue
+<!-- MyBreadcrumb.vue -->
+<script setup>
+import { useBreadcrumbActions } from 'vuefinder';
+
+const breadcrumb = useBreadcrumbActions();
+</script>
+
+<template>
+  <div class="my-breadcrumb">
+    <span>{{ breadcrumb.currentPath.path }}</span>
+    <button @click="breadcrumb.refresh()">Refresh</button>
+    <button @click="breadcrumb.goUp()">Go Up</button>
+  </div>
+</template>
+```
+
+```vue
+<template #breadcrumb-items>
+  <MyBreadcrumb />
+</template>
+```
+
+To merge everything into a single custom bar, combine `menu-items` with
+`showToolbar: false` and `showBreadcrumbBar: false` in the `config` prop - see
+the "MenuBar Customization" example for a full walkthrough.
+
 For complete slot reference, see [API Reference - Slots](../api-reference/slots.md).
