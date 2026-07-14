@@ -67,14 +67,12 @@ console.log('sortedFilesList', sortedFilesList);
             {{ storage }}
           </option>
         </select>
-        <span class="vuefinder__status-bar__storage-caret" aria-hidden="true"></span>
+        <span class="vuefinder__status-bar__storage-caret" aria- hidden="true"></span>
       </div>
       <div class="vuefinder__status-bar__info space-x-2">
         <span v-if="selectedCountNum === 0">
           {{ sortedFilesList.length }} {{ t('items') }}
-          <span class="vuefinder__status-bar__size">
-            {{ app.filesize(totalFileSize) }}
-          </span>
+          <span class="vuefinder__status-bar__size"> - {{ app.filesize(totalFileSize) }} </span>
         </span>
         <span v-else>
           {{ selectedCountNum }} {{ t('selected') }}
