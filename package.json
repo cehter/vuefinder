@@ -1,6 +1,6 @@
 {
   "name": "vuefinder",
-  "version": "4.6.0-cehter.1",
+  "version": "4.6.0-cehter.2",
   "description": "A sleek, developer-friendly file manager for Vue — organize, preview, and manage files with ease.",
   "type": "module",
   "engines": {
@@ -40,7 +40,8 @@
     "format:check": "prettier --check .",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "release": "bash scripts/release.sh"
   },
   "homepage": "https://github.com/n1crack/vuefinder#readme",
   "keywords": [
