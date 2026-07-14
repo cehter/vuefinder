@@ -108,4 +108,86 @@ import PDFIcon from './PDFIcon.vue';
 
 If the condition doesn't match, the default icon will be shown automatically.
 
+### `tree-view` Slot
+
+Replace the tree view's content (the pinned-folders header and the storage list) with your own component. This is useful for a fully custom tree layout - e.g. grouping storages differently, or rendering pinned folders as chips instead of a list.
+
+**Scoped Props:**
+
+- `pinnedFolders` - `PinnedFolder[]` - Currently pinned folders
+- `pinnedFoldersOpened` - `boolean` - Whether the pinned-folders section is expanded
+- `togglePinnedFoldersOpened` - `() => void` - Toggle the pinned-folders section
+- `removePin` - `(folder: PinnedFolder) => void` - Unpin a folder
+- `storages` - `string[]` - Configured storage names
+- `currentPath` - `CurrentPathState` - Current path state (`{ storage, path, breadcrumb }`)
+- `openPath` - `(path: string) => void` - Navigate to a path
+
+#### Example: Simple Storage Switcher
+
+```vue
+<template>
+  <vue-finder id="tree-view-example" :driver="driver" :config="{ showTreeView: true }">
+    <template #tree-view="{ storages, currentPath, openPath }">
+      <div class="storage-switcher">
+        <button
+          v-for="storage in storages"
+          :key="storage"
+          :class="{ active: currentPath.storage === storage }"
+          @click="openPath(storage + '://')"
+        >
+          {{ storage }}
+        </button>
+      </div>
+    </template>
+  </vue-finder>
+</template>
+```
+
+#### Example: Custom Component via `useTreeViewActions`
+
+For anything beyond what the scoped props expose, a custom component can call `useTreeViewActions()` itself - it reuses the exact same pinned-folders and navigation logic as the default `TreeView.vue`, so it isn't limited to the props passed through the slot.
+
+```vue
+<!-- CustomTreeView.vue -->
+<script setup>
+import { useTreeViewActions } from 'vuefinder';
+
+const {
+  storages,
+  currentPath,
+  pinnedFoldersOpened,
+  togglePinnedFoldersOpened,
+  removePin,
+  openPath,
+} = useTreeViewActions();
+</script>
+
+<template>
+  <div class="custom-tree-view">
+    <button @click="togglePinnedFoldersOpened">
+      {{ pinnedFoldersOpened ? 'Hide' : 'Show' }} Pinned
+    </button>
+    <ul v-for="storage in storages" :key="storage">
+      <li :class="{ active: currentPath.storage === storage }" @click="openPath(storage + '://')">
+        {{ storage }}
+      </li>
+    </ul>
+  </div>
+</template>
+```
+
+```vue
+<template>
+  <vue-finder id="tree-view-custom" :driver="driver" :config="{ showTreeView: true }">
+    <template #tree-view>
+      <CustomTreeView />
+    </template>
+  </vue-finder>
+</template>
+
+<script setup>
+import CustomTreeView from './CustomTreeView.vue';
+</script>
+```
+
 For complete slot reference, see [API Reference - Slots](../api-reference/slots.md).

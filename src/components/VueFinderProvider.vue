@@ -78,5 +78,8 @@ onBeforeUnmount(() => {
     <template #status-bar="slotProps">
       <slot name="status-bar" v-bind="slotProps" />
     </template>
+    <template #tree-view="slotProps">
+      <slot name="tree-view" v-bind="slotProps" />
+    </template>
   </VueFinderView>
 </template>

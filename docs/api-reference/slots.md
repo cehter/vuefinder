@@ -12,6 +12,7 @@ Complete reference of all VueFinder slots.
 | ------------ | --------------------------- | ---------------------------- |
 | `status-bar` | `{ selected, count, path }` | Customize status bar content |
 | `icon`       | `{ item }`                  | Customize file/folder icons  |
+| `tree-view`  | `{ pinnedFolders, pinnedFoldersOpened, togglePinnedFoldersOpened, removePin, storages, currentPath, openPath }` | Replace the tree view's content (pinned folders + storage list) |
 
 ## Slot Details
 
@@ -47,5 +48,29 @@ Customize the icon displayed for files and folders.
   <CustomIcon :item="item" />
 </template>
 ```
+
+### `tree-view`
+
+Replace the tree view's content (the pinned-folders header and storage list) with your own component. Falls back to the default rendering if left unused.
+
+**Scoped Props:**
+
+- `pinnedFolders` - `PinnedFolder[]` - Currently pinned folders
+- `pinnedFoldersOpened` - `boolean` - Whether the pinned-folders section is expanded
+- `togglePinnedFoldersOpened` - `() => void` - Toggle the pinned-folders section
+- `removePin` - `(folder: PinnedFolder) => void` - Unpin a folder
+- `storages` - `string[]` - Configured storage names
+- `currentPath` - `CurrentPathState` - Current path state (`{ storage, path, breadcrumb }`)
+- `openPath` - `(path: string) => void` - Navigate to a path
+
+```vue
+<template #tree-view="{ storages, openPath }">
+  <button v-for="storage in storages" :key="storage" @click="openPath(storage + '://')">
+    {{ storage }}
+  </button>
+</template>
+```
+
+For a fully custom tree, reuse [`useTreeViewActions`](../guide/slots.md#tree-view-slot) directly instead of relying only on the scoped props.
 
 For usage examples and common patterns, see [Guide - Slots](../guide/slots.md).

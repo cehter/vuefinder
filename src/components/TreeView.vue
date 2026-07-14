@@ -2,6 +2,7 @@
 import { onMounted, ref, watch, computed } from 'vue';
 import { useApp } from '../composables/useApp';
 import { useFeature } from '../composables/useFeature';
+import { useTreeViewActions } from '../composables/useTreeViewActions';
 import { useStore } from '@nanostores/vue';
 import FolderSVG from '../assets/icons/folder.svg';
 import OpenFolderSVG from '../assets/icons/open_folder.svg';
@@ -12,16 +13,13 @@ import { OverlayScrollbars } from 'overlayscrollbars';
 import TreeStorageItem from './TreeStorageItem.vue';
 import upsert from '../utils/upsert';
 import FolderIndicator from './FolderIndicator.vue';
-import { useDragNDrop } from '../composables/useDragNDrop';
-import type { DirEntry, PinnedFolder } from '../types';
+import type { DirEntry } from '../types';
 import type { StoreValue } from 'nanostores';
 import type { ConfigState } from '../stores/config';
 import type { CurrentPathState } from '../stores/files';
 
 const app = useApp();
 const { enabled } = useFeature();
-const { t } = app.i18n;
-const { getStore, setStore } = app.storage;
 
 const fs = app.fs;
 const config = app.config;
@@ -29,20 +27,21 @@ const config = app.config;
 // Use nanostores reactive values for template reactivity
 const configState: StoreValue<ConfigState> = useStore(config.state);
 const sortedFiles: StoreValue<DirEntry[]> = useStore(fs.sortedFiles);
-const storages: StoreValue<string[]> = useStore(fs.storages);
-const storagesList = computed(() => storages.value || []);
 const currentPath: StoreValue<CurrentPathState> = useStore(fs.path);
 
-const dragNDrop = useDragNDrop(app, ['vuefinder__drag-over']);
+const {
+  t,
+  storages,
+  dragNDrop,
+  pinnedFolders,
+  pinnedFoldersOpened,
+  togglePinnedFoldersOpened,
+  openPath,
+  removePin,
+} = useTreeViewActions();
+const storagesList = computed(() => storages.value || []);
 
 const treeViewWidth = ref(190);
-const pinnedFoldersOpened = ref(getStore('pinned-folders-opened', true));
-watch(pinnedFoldersOpened, (value) => setStore('pinned-folders-opened', value));
-
-const removePin = (item: PinnedFolder) => {
-  const current = config.get('pinnedFolders') as unknown as PinnedFolder[];
-  config.set('pinnedFolders', current.filter((fav: PinnedFolder) => fav.path !== item.path) as any);
-};
 
 const handleMouseDown = (e: MouseEvent) => {
   const startX = e.clientX;
@@ -131,59 +130,76 @@ watch(sortedFiles, (newFiles) => {
     class="vuefinder__treeview__container"
   >
     <div ref="treeViewScrollElement" class="vuefinder__treeview__scroll">
-      <div v-if="enabled('pinned')" class="vuefinder__treeview__header">
-        <div
-          class="vuefinder__treeview__pinned-toggle"
-          @click="pinnedFoldersOpened = !pinnedFoldersOpened"
-        >
-          <div class="vuefinder__treeview__pinned-label">
-            <PinSVG class="vuefinder__treeview__pin-icon" />
-            <div class="vuefinder__treeview__pin-text text-nowrap">{{ t('Pinned Folders') }}</div>
-          </div>
-          <FolderIndicator v-model="pinnedFoldersOpened" />
-        </div>
-        <ul v-if="pinnedFoldersOpened" class="vuefinder__treeview__pinned-list">
-          <li
-            v-for="folder in configState.pinnedFolders"
-            :key="folder.path"
-            class="vuefinder__treeview__pinned-item"
-          >
-            <div
-              class="vuefinder__treeview__pinned-folder"
-              v-on="dragNDrop.events(folder)"
-              @click="app.adapter.open(folder.path)"
-            >
-              <FolderSVG
-                v-if="currentPath.path !== folder.path"
-                class="vuefinder__treeview__folder-icon vuefinder__item-icon__folder"
-              />
-              <OpenFolderSVG
-                v-if="currentPath.path === folder.path"
-                class="vuefinder__item-icon__folder--open vuefinder__treeview__open-folder-icon"
-              />
-              <div
-                :title="folder.path"
-                class="vuefinder__treeview__folder-name"
-                :class="{
-                  'vuefinder__treeview__folder-name--active': currentPath.path === folder.path,
-                }"
-              >
-                {{ folder.basename }}
+      <!--
+        Extension point: replace the pinned-folders header and storage list
+        entirely with a custom component. Receives the same reactive data
+        and actions (from `useTreeViewActions`) that power the default
+        rendering below, so a custom layout can filter/reorder storages,
+        render pinned folders differently, etc.
+      -->
+      <slot
+        name="tree-view"
+        :pinned-folders="pinnedFolders"
+        :pinned-folders-opened="pinnedFoldersOpened"
+        :toggle-pinned-folders-opened="togglePinnedFoldersOpened"
+        :remove-pin="removePin"
+        :storages="storagesList"
+        :current-path="currentPath"
+        :open-path="openPath"
+      >
+        <div v-if="enabled('pinned')" class="vuefinder__treeview__header">
+          <div class="vuefinder__treeview__pinned-toggle" @click="togglePinnedFoldersOpened">
+            <div class="vuefinder__treeview__pinned-label">
+              <PinSVG class="vuefinder__treeview__pin-icon" />
+              <div class="vuefinder__treeview__pin-text text-nowrap">
+                {{ t('Pinned Folders') }}
               </div>
             </div>
-            <div class="vuefinder__treeview__remove-folder" @click="removePin(folder)">
-              <XBoxSVG class="vuefinder__treeview__remove-icon" />
-            </div>
-          </li>
-          <li v-if="!configState.pinnedFolders.length">
-            <div class="vuefinder__treeview__no-pinned">{{ t('No folders pinned') }}</div>
-          </li>
-        </ul>
-      </div>
+            <FolderIndicator v-model="pinnedFoldersOpened" />
+          </div>
+          <ul v-if="pinnedFoldersOpened" class="vuefinder__treeview__pinned-list">
+            <li
+              v-for="folder in pinnedFolders"
+              :key="folder.path"
+              class="vuefinder__treeview__pinned-item"
+            >
+              <div
+                class="vuefinder__treeview__pinned-folder"
+                v-on="dragNDrop.events(folder)"
+                @click="openPath(folder.path)"
+              >
+                <FolderSVG
+                  v-if="currentPath.path !== folder.path"
+                  class="vuefinder__treeview__folder-icon vuefinder__item-icon__folder"
+                />
+                <OpenFolderSVG
+                  v-if="currentPath.path === folder.path"
+                  class="vuefinder__item-icon__folder--open vuefinder__treeview__open-folder-icon"
+                />
+                <div
+                  :title="folder.path"
+                  class="vuefinder__treeview__folder-name"
+                  :class="{
+                    'vuefinder__treeview__folder-name--active': currentPath.path === folder.path,
+                  }"
+                >
+                  {{ folder.basename }}
+                </div>
+              </div>
+              <div class="vuefinder__treeview__remove-folder" @click="removePin(folder)">
+                <XBoxSVG class="vuefinder__treeview__remove-icon" />
+              </div>
+            </li>
+            <li v-if="!pinnedFolders.length">
+              <div class="vuefinder__treeview__no-pinned">{{ t('No folders pinned') }}</div>
+            </li>
+          </ul>
+        </div>
 
-      <div v-for="storage in storagesList" :key="storage" class="vuefinder__treeview__storage">
-        <TreeStorageItem :storage="storage" />
-      </div>
+        <div v-for="storage in storagesList" :key="storage" class="vuefinder__treeview__storage">
+          <TreeStorageItem :storage="storage" />
+        </div>
+      </slot>
     </div>
     <div class="vuefinder__treeview__resize-handle" @mousedown="handleMouseDown"></div>
   </div>
