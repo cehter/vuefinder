@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import type { Driver } from '../../src/adapters';
 import CustomTreeView from './CustomTreeView.vue';
+import AlwaysRootTreeView from './AlwaysRootTreeView.vue';
 
 interface Props {
   driver: Driver;
@@ -11,7 +12,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-type Mode = 'default' | 'storage-switcher' | 'custom-component';
+type Mode = 'default' | 'storage-switcher' | 'custom-component' | 'always-root';
 
 const mode = ref<Mode>('default');
 
@@ -19,6 +20,8 @@ const modes: Record<Mode, string> = {
   default: 'Default TreeView (no slot used)',
   'storage-switcher': 'Replace via "tree-view" scoped slot (inline storage switcher)',
   'custom-component': 'Replace via "tree-view" slot with a component using useTreeViewActions',
+  'always-root':
+    'Root always navigates home (never toggles) + expandable subfolders via TreeSubfolderList',
 };
 
 const computedConfig = computed(() => ({
@@ -82,7 +85,7 @@ const computedConfig = computed(() => ({
            passes in - it reuses the exact same pinned-folders/navigation
            logic as the default TreeView.vue (see CustomTreeView.vue). -->
       <vue-finder
-        v-else
+        v-else-if="mode === 'custom-component'"
         id="treeview_custom_component"
         :driver="driver"
         :config="computedConfig"
@@ -90,6 +93,21 @@ const computedConfig = computed(() => ({
       >
         <template #tree-view>
           <CustomTreeView />
+        </template>
+      </vue-finder>
+
+      <!-- Mode 4: same idea as mode 3, but the root row always navigates to
+           the storage root on click instead of toggling collapse once
+           active - the behavior a single-storage file manager sidebar needs. -->
+      <vue-finder
+        v-else
+        id="treeview_custom_always_root"
+        :driver="driver"
+        :config="computedConfig"
+        :features="features"
+      >
+        <template #tree-view>
+          <AlwaysRootTreeView />
         </template>
       </vue-finder>
     </div>
