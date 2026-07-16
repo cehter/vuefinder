@@ -1,5 +1,6 @@
 import VueFinder from './components/VueFinderProvider.vue';
 import VueFinderProvider from './components/VueFinderProvider.vue';
+import TreeSubfolderList from './components/TreeSubfolderList.vue';
 import './assets/css/style.css';
 import { menuItems as contextMenuItems, ContextMenuIds } from './utils/contextmenu';
 import { type App } from 'vue';
@@ -37,7 +38,7 @@ export const VueFinderPlugin = {
 
 export default VueFinderPlugin;
 
-export { VueFinder, VueFinderProvider, contextMenuItems, ContextMenuIds };
+export { VueFinder, VueFinderProvider, TreeSubfolderList, contextMenuItems, ContextMenuIds };
 export { useVueFinder, useMenuItems, useBreadcrumbActions, useTreeViewActions };
 
 export { RemoteDriver, ArrayDriver, IndexedDBDriver, BaseAdapter, parseBackendError };
