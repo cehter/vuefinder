@@ -5,6 +5,7 @@
 // resolves against the surrounding VueFinder instance just like it does
 // inside the library's own TreeView component.
 import { useTreeViewActions } from '../../src';
+import TreeStorageItem from '../../src/components/TreeStorageItem.vue';
 
 const {
   t,
@@ -50,6 +51,18 @@ const {
         @click="openPath(storage + '://')"
       >
         🗄️ {{ storage }}
+      </div>
+    </div>
+
+    <div class="custom-tree-view__section">
+      <!--
+        Reuses TreeStorageItem - the same component the default TreeView.vue
+        renders per storage - so the custom layout also gets an expandable
+        folder tree (not just the flat storage list above), without having
+        to reimplement folder loading/expansion itself.
+      -->
+      <div v-for="storage in storages" :key="storage" class="custom-tree-view__folders">
+        <TreeStorageItem :storage="storage" />
       </div>
     </div>
   </div>
@@ -114,5 +127,11 @@ const {
   background: #eef2ff;
   color: #4338ca;
   font-weight: 500;
+}
+
+.custom-tree-view__folders {
+  border-top: 1px dashed #e5e7eb;
+  padding-top: 6px;
+  margin-top: 6px;
 }
 </style>
