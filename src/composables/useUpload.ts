@@ -314,8 +314,10 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
 
     uppy.on('restriction-failed', (upFile: any, error: any) => {
       const entry = queue.value[findQueueEntryIndexById(upFile.id)];
-      if (entry) remove(entry);
-      message.value = error.message;
+      if (entry) {
+        entry.status = QUEUE_ENTRY_STATUS.ERROR;
+        entry.statusName = error.message;
+      }
     });
 
     uppy.on('upload-start', (upFiles: any) => {
