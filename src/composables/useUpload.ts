@@ -13,6 +13,11 @@ export const QUEUE_ENTRY_STATUS = {
   UPLOADING: 2,
   ERROR: 3,
   DONE: 10,
+  // A restriction (e.g. allowedFileTypes) rejected the file before any upload
+  // attempt was made - distinct from ERROR (which is a failed upload attempt),
+  // since renaming can't fix a rejected file the way it could a transient
+  // network failure.
+  REJECTED: 4,
 } as const;
 export type QueueEntryStatus = (typeof QUEUE_ENTRY_STATUS)[keyof typeof QUEUE_ENTRY_STATUS];
 
@@ -109,34 +114,42 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
           if (getAsEntry) {
             scanFiles((entry: any, file: File) => {
               const matched = trimFileName.exec((entry?.fullPath as string) || '');
-              addFile(file, matched ? matched[1] : file.name);
+              addFileSafe(file, matched ? matched[1] : file.name);
             }, getAsEntry);
           } else {
             const f = item.getAsFile?.();
-            if (f) addFile(f);
+            if (f) addFileSafe(f);
           }
         }
       });
     } else if (dt.files && dt.files.length) {
-      Array.from(dt.files).forEach((file) => addFile(file));
+      Array.from(dt.files).forEach((file) => addFileSafe(file));
     }
   };
 
   const findQueueEntryIndexById = (id: string) => queue.value.findIndex((item) => item.id === id);
   const addFile = (file: File, name?: string) =>
     uppy.addFile({ name: name || file.name, type: file.type, data: file, source: 'Local' });
+
+  const addFileSafe = (file: File, name?: string) => {
+    try {
+      return addFile(file, name);
+    } catch {
+      return undefined;
+    }
+  };
+  const isErrorLike = (entry: QueueEntry) =>
+    entry.status === QUEUE_ENTRY_STATUS.ERROR ||
+    entry.status === QUEUE_ENTRY_STATUS.CANCELED ||
+    entry.status === QUEUE_ENTRY_STATUS.REJECTED;
   const getClassNameForEntry = (entry: QueueEntry) =>
     entry.status === QUEUE_ENTRY_STATUS.DONE
       ? 'text-green-600'
-      : entry.status === QUEUE_ENTRY_STATUS.ERROR || entry.status === QUEUE_ENTRY_STATUS.CANCELED
+      : isErrorLike(entry)
         ? 'text-red-600'
         : '';
   const getIconForEntry = (entry: QueueEntry) =>
-    entry.status === QUEUE_ENTRY_STATUS.DONE
-      ? '✓'
-      : entry.status === QUEUE_ENTRY_STATUS.ERROR || entry.status === QUEUE_ENTRY_STATUS.CANCELED
-        ? '!'
-        : '...';
+    entry.status === QUEUE_ENTRY_STATUS.DONE ? '✓' : isErrorLike(entry) ? '!' : '...';
   const openFileSelector = () => pickFiles.value?.click();
   const close = () => app.modal.close();
 
@@ -181,7 +194,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
     if (onlySuccessful) {
       const retryQueue = queue.value.filter((entry) => entry.status !== QUEUE_ENTRY_STATUS.DONE);
       queue.value = [];
-      retryQueue.forEach((entry) => addFile(entry.originalFile, entry.name));
+      retryQueue.forEach((entry) => addFileSafe(entry.originalFile, entry.name));
     } else {
       queue.value = [];
     }
@@ -190,9 +203,9 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
   const addExternalFiles = (files: (File | { file: File; name?: string })[]) => {
     files.forEach((entry) => {
       if (entry instanceof File) {
-        addFile(entry);
+        addFileSafe(entry);
       } else {
-        addFile(entry.file, entry.name);
+        addFileSafe(entry.file, entry.name);
       }
     });
   };
@@ -315,7 +328,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
     uppy.on('restriction-failed', (upFile: any, error: any) => {
       const entry = queue.value[findQueueEntryIndexById(upFile.id)];
       if (entry) {
-        entry.status = QUEUE_ENTRY_STATUS.ERROR;
+        entry.status = QUEUE_ENTRY_STATUS.REJECTED;
         entry.statusName = error.message;
       }
     });
@@ -397,7 +410,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
       const target = evt.target as HTMLInputElement;
       const files = target.files;
       if (!files) return;
-      for (const file of files) addFile(file, file.webkitRelativePath || undefined);
+      for (const file of files) addFileSafe(file, file.webkitRelativePath || undefined);
       target.value = '';
     };
 

@@ -16,6 +16,7 @@ import EventsDemoExample from './examples/EventsDemoExample.vue';
 import CustomDclickExample from './examples/CustomDclickExample.vue';
 import SingleSelectionExample from './examples/SingleSelectionExample.vue';
 import SelectionFilterExample from './examples/SelectionFilterExample.vue';
+import UploadRestrictionsExample from './examples/UploadRestrictionsExample.vue';
 import FeaturesExample from './examples/FeaturesExample.vue';
 import UIVisibilityExample from './examples/UIVisibilityExample.vue';
 import MenuBarCustomizationExample from './examples/MenuBarCustomizationExample.vue';
@@ -135,6 +136,7 @@ const examples = {
   customDclick: 'Custom Double-Click Events Demo',
   singleSelection: 'Single Selection Mode Demo',
   selectionFilter: 'Selection Filter Demo',
+  uploadRestrictions: 'Upload File Type Restrictions Demo',
   features: 'Features Configuration Demo',
   uiVisibility: 'UI Visibility Settings Demo',
   menuBarCustomization: 'MenuBar Customization (Slots Demo)',
@@ -421,6 +423,13 @@ onUnmounted(() => {
 
       <SelectionFilterExample
         v-if="example === 'selectionFilter'"
+        :driver="driver"
+        :config="{ ...config, theme: currentTheme }"
+        :features="features"
+      />
+
+      <UploadRestrictionsExample
+        v-if="example === 'uploadRestrictions'"
         :driver="driver"
         :config="{ ...config, theme: currentTheme }"
         :features="features"

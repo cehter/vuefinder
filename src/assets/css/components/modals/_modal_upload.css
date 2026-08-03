@@ -42,6 +42,16 @@
   @apply flex text-left break-all text-(--vf-text-secondary);
 }
 
+.vuefinder__upload-modal__file-icon.text-red-600,
+.vuefinder__upload-modal__file-status.text-red-600 {
+  @apply text-red-600;
+}
+
+.vuefinder__upload-modal__file-icon.text-green-600,
+.vuefinder__upload-modal__file-status.text-green-600 {
+  @apply text-green-600;
+}
+
 .vuefinder__themer .vuefinder__upload-modal__file-remove {
   @apply ml-auto flex h-5 w-5 items-center justify-center rounded border border-(--vf-border-primary) bg-(--vf-bg-tertiary) text-base leading-none font-medium text-(--vf-text-secondary) focus:outline-none sm:text-xs;
 }
