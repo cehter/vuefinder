@@ -5,6 +5,7 @@ export declare const QUEUE_ENTRY_STATUS: {
     readonly UPLOADING: 2;
     readonly ERROR: 3;
     readonly DONE: 10;
+    readonly REJECTED: 4;
 };
 export type QueueEntryStatus = (typeof QUEUE_ENTRY_STATUS)[keyof typeof QUEUE_ENTRY_STATUS];
 export interface QueueEntry {
