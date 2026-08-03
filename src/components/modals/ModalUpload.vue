@@ -90,6 +90,10 @@ const entryBasename = (name: string): string => {
 const startEdit = (entry: QueueEntry) => {
   if (uploading.value) return;
   if (entry.status === definitions.value.QUEUE_ENTRY_STATUS.UPLOADING) return;
+  // Rejected entries have no rename affordance in the UI (see the v-if on the
+  // rename button below) - guard here too so the handler can't be reached any
+  // other way and used to bypass a type restriction via rename.
+  if (entry.status === definitions.value.QUEUE_ENTRY_STATUS.REJECTED) return;
   editingId.value = entry.id;
   editingName.value = entryBasename(entry.name);
   nextTick(() => {
@@ -293,7 +297,7 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
               </template>
             </div>
             <button
-              v-if="editingId !== entry.id"
+              v-if="editingId !== entry.id && entry.status !== definitions.QUEUE_ENTRY_STATUS.REJECTED"
               type="button"
               class="vuefinder__upload-modal__file-rename-action"
               :class="
