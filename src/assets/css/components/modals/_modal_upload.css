@@ -18,6 +18,10 @@
   @apply flex p-0.5;
 }
 
+.vuefinder__upload-modal__bulk-summary {
+  @apply p-0.5 text-(--vf-text-primary);
+}
+
 .vuefinder__upload-modal__file-entry:hover {
   @apply bg-(--vf-bg-hover);
 }

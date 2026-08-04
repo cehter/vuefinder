@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, nextTick, ref } from 'vue';
+import { onMounted, onUnmounted, nextTick, ref, computed } from 'vue';
 import type { QueueEntry } from '../../composables/useUpload';
 import { useStore } from '@nanostores/vue';
 import Message from '../../components/Message.vue';
@@ -142,6 +142,15 @@ onUnmounted(() => {
   app.emitter.off('vf-external-files-dropped');
 });
 
+// Once the queue is larger than this, the file list collapses to a summary
+// (name-by-name rename/remove doesn't scale to hundreds of files).
+const BULK_LIST_THRESHOLD = 20;
+const isBulkMode = computed(() => queue.value.length > BULK_LIST_THRESHOLD);
+const rejectedEntries = computed(() =>
+  queue.value.filter((entry) => entry.status === definitions.value.QUEUE_ENTRY_STATUS.REJECTED)
+);
+const acceptedCount = computed(() => queue.value.length - rejectedEntries.value.length);
+
 // Dropdown state
 const showActions = ref(false);
 
@@ -212,7 +221,37 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
 
         <!-- Container for programmatic hooks -->
         <div ref="container" class="hidden"></div>
-        <div class="vuefinder__upload-modal__file-list vf-scrollbar">
+        <div v-if="isBulkMode" class="vuefinder__upload-modal__file-list vf-scrollbar">
+          <div class="vuefinder__upload-modal__bulk-summary">
+            {{ t('Uploading %s files.', acceptedCount) }}
+          </div>
+          <template v-if="rejectedEntries.length">
+            <div class="vuefinder__upload-modal__bulk-summary text-red-600">
+              {{ t('%s files will not be uploaded because of an invalid file type:', rejectedEntries.length) }}
+            </div>
+            <div
+              v-for="entry in rejectedEntries"
+              :key="entry.id"
+              class="vuefinder__upload-modal__file-entry"
+            >
+              <span class="vuefinder__upload-modal__file-icon text-red-600">
+                <span class="vuefinder__upload-modal__file-icon-text" v-text="'!'"></span>
+              </span>
+              <div class="vuefinder__upload-modal__file-info">
+                <div class="vuefinder__upload-modal__file-name hidden md:block">
+                  {{ titleShorten(entry.name, 40) }} ({{ entry.size }})
+                </div>
+                <div class="vuefinder__upload-modal__file-name md:hidden">
+                  {{ titleShorten(entry.name, 16) }} ({{ entry.size }})
+                </div>
+                <div class="vuefinder__upload-modal__file-status text-red-600">
+                  {{ entry.statusName }}
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <div v-else class="vuefinder__upload-modal__file-list vf-scrollbar">
           <div v-for="entry in queue" :key="entry.id" class="vuefinder__upload-modal__file-entry">
             <span class="vuefinder__upload-modal__file-icon" :class="getClassNameForEntry(entry)">
               <span
