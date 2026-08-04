@@ -24,6 +24,7 @@ export interface UseUploadReturn {
     pickFiles: Ref<HTMLElement | null>;
     pickFolders: Ref<HTMLElement | null>;
     queue: Ref<QueueEntry[]>;
+    allowedFileTypes: Ref<string[] | null>;
     message: Ref<string>;
     uploading: Ref<boolean>;
     hasFilesInDropArea: Ref<boolean>;

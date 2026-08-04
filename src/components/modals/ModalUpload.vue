@@ -60,6 +60,7 @@ const {
   internalFolderInput,
   pickFiles,
   queue,
+  allowedFileTypes,
   message,
   uploading,
   hasFilesInDropArea,
@@ -227,8 +228,13 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
           </div>
           <template v-if="rejectedEntries.length">
             <div class="vuefinder__upload-modal__bulk-summary text-red-600">
-              {{ t('%s files will not be uploaded because of an invalid file type:', rejectedEntries.length) }}
+              <span class="text-red-600">{{ t('%s files ', rejectedEntries.length) }}</span
+              >{{ t('will not be uploaded because of an invalid file type:') }}
+              <div v-if="allowedFileTypes && allowedFileTypes.length">
+                {{ t('Allowed file types: %s', allowedFileTypes.join(', ')) }}
+              </div>
             </div>
+
             <div
               v-for="entry in rejectedEntries"
               :key="entry.id"
@@ -243,9 +249,6 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
                 </div>
                 <div class="vuefinder__upload-modal__file-name md:hidden">
                   {{ titleShorten(entry.name, 16) }} ({{ entry.size }})
-                </div>
-                <div class="vuefinder__upload-modal__file-status text-red-600">
-                  {{ entry.statusName }}
                 </div>
               </div>
             </div>
@@ -336,7 +339,9 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
               </template>
             </div>
             <button
-              v-if="editingId !== entry.id && entry.status !== definitions.QUEUE_ENTRY_STATUS.REJECTED"
+              v-if="
+                editingId !== entry.id && entry.status !== definitions.QUEUE_ENTRY_STATUS.REJECTED
+              "
               type="button"
               class="vuefinder__upload-modal__file-rename-action"
               :class="

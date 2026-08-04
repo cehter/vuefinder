@@ -38,6 +38,7 @@ export interface UseUploadReturn {
   pickFiles: Ref<HTMLElement | null>;
   pickFolders: Ref<HTMLElement | null>;
   queue: Ref<QueueEntry[]>;
+  allowedFileTypes: Ref<string[] | null>;
   message: Ref<string>;
   uploading: Ref<boolean>;
   hasFilesInDropArea: Ref<boolean>;
@@ -68,6 +69,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
   const pickFolders = ref<HTMLElement | null>(null);
 
   const queue = ref<QueueEntry[]>([]);
+  const allowedFileTypes = ref<string[] | null>(null);
   const message = ref('');
   const uploading = ref(false);
   const hasFilesInDropArea = ref(false);
@@ -325,6 +327,8 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
       throw new Error('No uploader configured');
     }
 
+    allowedFileTypes.value = uppy.opts.restrictions?.allowedFileTypes ?? null;
+
     uppy.on('restriction-failed', (upFile: any, error: any) => {
       const entry = queue.value[findQueueEntryIndexById(upFile.id)];
       if (entry) {
@@ -434,6 +438,7 @@ export default function useUpload(customUploader?: any): UseUploadReturn {
     pickFiles,
     pickFolders,
     queue,
+    allowedFileTypes,
     message,
     uploading,
     hasFilesInDropArea,
