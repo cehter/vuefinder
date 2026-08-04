@@ -228,9 +228,15 @@ onUnmounted(() => document.removeEventListener('click', onClickOutside));
           </div>
           <template v-if="rejectedEntries.length">
             <div class="vuefinder__upload-modal__bulk-summary text-red-600">
-              <span class="text-red-600">{{ t('%s files ', rejectedEntries.length) }}</span
-              >{{ t('will not be uploaded because of an invalid file type:') }}
-              <div v-if="allowedFileTypes && allowedFileTypes.length">
+              <span class="text-red-600">
+                {{
+                  t(
+                    '%s files will not be uploaded because of an invalid file type:',
+                    rejectedEntries.length
+                  )
+                }}</span
+              >
+              <div class="text-red-600" v-if="allowedFileTypes && allowedFileTypes.length">
                 {{ t('Allowed file types: %s', allowedFileTypes.join(', ')) }}
               </div>
             </div>
